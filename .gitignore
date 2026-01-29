@@ -1,26 +1,31 @@
 # Trae IDE
 .trae/
+.vscode/
 
-# Node.js
+# Node.js 依赖
 node_modules/
+
+# 日志文件
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Environment variables
+# 环境变量文件
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*.local
 
-# Build files
+# 构建文件
 dist/
 build/
+dist-ssr/
+*.local
 
-# OS generated files
+# 操作系统生成的文件
 .DS_Store
 .DS_Store?
 ._*
@@ -28,3 +33,65 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# 编辑器文件
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 二进制文件
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+
+# 测试覆盖率
+coverage/
+*.lcov
+.nyc_output
+
+# 缓存文件
+.npm
+.eslintcache
+.stylelintcache
+.cache
+.parcel-cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# REPL 历史
+.node_repl_history
+
+# npm 打包输出
+*.tgz
+
+# Yarn 完整性文件
+.yarn-integrity
+
+# Yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# 服务器less目录
+.serverless/
+
+# FuseBox 缓存
+.fusebox/
+
+# DynamoDB 本地文件
+.dynamodb/
+
+# TernJS 端口文件
+.tern-port
+
+# VSCode 测试版本存储
+.vscode-test
