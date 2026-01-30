@@ -81,6 +81,63 @@ coverage/
 .yarn/install-state.gz
 .pnp.*
 
+# npm 锁文件
+package-lock.json
+
+# Yarn 锁文件
+yarn.lock
+
+# pnpm 锁文件
+pnpm-lock.yaml
+
+# 依赖安装相关
+node_modules/
+jspm_packages/
+
+# 编辑器相关
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 操作系统相关
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 构建文件
+dist/
+build/
+dist-ssr/
+*.local
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 日志文件
+logs/
+*.log
+
+# 二进制文件
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+
 # 服务器less目录
 .serverless/
 
