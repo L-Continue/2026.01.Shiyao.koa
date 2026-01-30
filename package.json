@@ -2,14 +2,20 @@
   "name": "2026.01.shiyao.koa",
   "version": "1.0.0",
   "description": "Koa backend with frontend client",
+  "main": "server/src/index.js",
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd server && npm start",
-    "server:dev": "cd server && npm run dev",
-    "client": "cd client && npm run dev",
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install"
+    "server": "node server/src/index.js",
+    "server:dev": "nodemon server/src/index.js",
+    "client": "live-server client/public"
+  },
+  "dependencies": {
+    "koa": "^3.1.1",
+    "koa-router": "^14.0.0"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11",
+    "live-server": "^1.2.2"
   }
 }
