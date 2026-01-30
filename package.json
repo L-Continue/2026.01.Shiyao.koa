@@ -5,9 +5,12 @@
   "main": "server/src/index.js",
   "scripts": {
     "start": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
     "server": "node server/src/index.js",
     "server:dev": "nodemon server/src/index.js",
-    "client": "live-server client/public"
+    "client": "live-server client/public",
+    "build": "echo 'Build completed'",
+    "start:prod": "node server/src/index.js"
   },
   "dependencies": {
     "koa": "^3.1.1",
