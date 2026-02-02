@@ -1,6 +1,6 @@
-// 路由配置文件
+// 加载路由、配置
 const Router = require('@koa/router')
-const photoController = require('../controllers/photoController')
+const fileController = require('../controllers/fileController')
 const authController = require('../controllers/authController')
 
 // 主路由
@@ -21,31 +21,31 @@ const authRouter = new Router({ prefix: '/api/auth' })
 // 验证管理密码 - POST /api/auth/verify
 authRouter.post('/verify', (ctx) => authController.verifyPassword(ctx))
 
-// 照片相关路由（/api 前缀）
-const photoRouter = new Router({ prefix: '/api' })
+// 文件相关路由（/api 前缀）
+const fileRouter = new Router({ prefix: '/api' })
 
-// 上传图片 - POST /api/photos
-photoRouter.post('/photos', (ctx) => photoController.uploadPhoto(ctx))
+// 上传文件 - POST /api/files
+fileRouter.post('/files', (ctx) => fileController.uploadFile(ctx))
 
-// 获取照片列表 - GET /api/photos
-photoRouter.get('/photos', (ctx) => photoController.getPhotos(ctx))
+// 获取文件列表 - GET /api/files
+fileRouter.get('/files', (ctx) => fileController.getFiles(ctx))
 
-// 获取最新上传的照片 - GET /api/photos/recent
-photoRouter.get('/photos/recent', (ctx) => photoController.getRecentPhotos(ctx))
+// 获取最新上传的文件 - GET /api/files/recent
+fileRouter.get('/files/recent', (ctx) => fileController.getRecentFiles(ctx))
 
-// 删除照片 - DELETE /api/photos/:path
-photoRouter.delete('/photos/:path', (ctx) => photoController.deletePhoto(ctx))
+// 删除文件 - DELETE /api/files/:path
+fileRouter.delete('/files/:path', (ctx) => fileController.deleteFile(ctx))
 
-// 重命名照片 - PUT /api/photos/:path
-photoRouter.put('/photos/:path', (ctx) => photoController.renamePhoto(ctx))
+// 重命名文件 - PUT /api/files/:path
+fileRouter.put('/files/:path', (ctx) => fileController.renameFile(ctx))
 
 // 获取分类列表 - GET /api/categories
-photoRouter.get('/categories', (ctx) => photoController.getCategories(ctx))
+fileRouter.get('/categories', (ctx) => fileController.getCategories(ctx))
 
 // 注册认证路由
 router.use(authRouter.routes())
 
-// 注册照片路由
-router.use(photoRouter.routes())
+// 注册文件路由
+router.use(fileRouter.routes())
 
 module.exports = router

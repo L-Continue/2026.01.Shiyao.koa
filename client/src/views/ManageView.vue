@@ -1,18 +1,18 @@
 <template>
   <div class="manage-view">
     <div class="manage-header">
-      <h2>照片管理</h2>
+      <h2>文件管理</h2>
       <el-button type="danger" @click="handleLogout">退出管理</el-button>
     </div>
 
     <div class="manage-content">
       <!-- 上传区域 -->
       <div class="upload-section">
-        <h3>上传照片</h3>
+        <h3>上传文件</h3>
         <el-upload
           class="upload-demo"
           drag
-          action="http://localhost:3000/api/photos"
+          action="http://localhost:3000/api/files"
           name="file"
           :on-success="handleUploadSuccess"
           :on-error="handleUploadError"
@@ -38,19 +38,19 @@
         </div>
       </div>
 
-      <!-- 照片管理区域 -->
+      <!-- 文件管理区域 -->
       <div class="photos-section">
-        <h3>照片列表</h3>
+        <h3>文件列表</h3>
         <el-input
           v-model="searchQuery"
-          placeholder="搜索照片"
+          placeholder="搜索文件"
           clearable
           style="margin-bottom: 20px;"
         />
 
         <el-tabs v-model="activeCategory">
-          <el-tab-pane label="全部照片" name="all">
-            <el-table :data="filteredPhotos" style="width: 100%">
+          <el-tab-pane label="全部文件" name="all">
+            <el-table :data="filteredFiles" style="width: 100%">
               <el-table-column prop="name" label="文件名" width="300">
                 <template #default="scope">
                   <a href="javascript:void(0)" @click="openLargeImage(scope.row.largeUrl)">{{ scope.row.name }}</a>
@@ -80,7 +80,7 @@
             :label="category"
             :name="category"
           >
-            <el-table :data="getPhotosByCategory(category)" style="width: 100%">
+            <el-table :data="getFilesByCategory(category)" style="width: 100%">
               <el-table-column prop="name" label="文件名" width="300">
                 <template #default="scope">
                   <a href="javascript:void(0)" @click="openLargeImage(scope.row.largeUrl)">{{ scope.row.name }}</a>
@@ -111,7 +111,7 @@
     <!-- 重命名弹窗 -->
     <el-dialog
       v-model="renameDialogVisible"
-      title="重命名照片"
+      title="重命名文件"
       width="400px"
     >
       <el-form
@@ -154,8 +154,8 @@ const uploadPercentage = ref(0)
 const uploadStatus = ref('')
 const uploadMessage = ref('')
 
-// 照片管理相关
-const photos = ref([])
+// 文件管理相关
+const files = ref([])
 const categories = ref([])
 const activeCategory = ref('all')
 const searchQuery = ref('')
@@ -170,43 +170,43 @@ const renameRules = {
 }
 const renameFormRef = ref(null)
 const renaming = ref(false)
-const currentPhoto = ref(null)
+const currentFile = ref(null)
 
-// 计算属性：过滤后的照片
-const filteredPhotos = computed(() => {
-  if (!searchQuery.value) return photos.value
-  return photos.value.filter(photo =>
-    photo.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+// 计算属性：过滤后的文件
+const filteredFiles = computed(() => {
+  if (!searchQuery.value) return files.value
+  return files.value.filter(file =>
+    file.name.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
 
 // 生命周期
 onMounted(() => {
-  fetchPhotos()
+  fetchFiles()
   fetchCategories()
 })
 
-// 获取照片列表
-const fetchPhotos = async () => {
+// 获取文件列表
+const fetchFiles = async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/photos')
+    const response = await fetch('http://localhost:3000/api/files')
     const result = await response.json()
     if (result.success) {
-      // 扁平化照片列表
-      const allPhotos = []
+      // 扁平化文件列表
+      const allFiles = []
       result.data.forEach(category => {
-        category.photos.forEach(photo => {
-          allPhotos.push({
-            ...photo,
+        category.photos.forEach(file => {
+          allFiles.push({
+            ...file,
             category: category.name
           })
         })
       })
-      photos.value = allPhotos
+      files.value = allFiles
     }
   } catch (error) {
-    console.error('获取照片列表失败:', error)
-    ElMessage.error('获取照片列表失败，请稍后重试')
+    console.error('获取文件列表失败:', error)
+    ElMessage.error('获取文件列表失败，请稍后重试')
   }
 }
 
@@ -224,9 +224,9 @@ const fetchCategories = async () => {
   }
 }
 
-// 按分类获取照片
-const getPhotosByCategory = (category) => {
-  return photos.value.filter(photo => photo.category === category)
+// 按分类获取文件
+const getFilesByCategory = (category) => {
+  return files.value.filter(file => file.category === category)
 }
 
 // 上传相关方法
@@ -263,8 +263,8 @@ const handleUploadSuccess = (response, uploadFile, uploadFiles) => {
     setTimeout(() => {
       uploading.value = false
       fileList.value = []
-      // 刷新照片列表
-      fetchPhotos()
+      // 刷新文件列表
+      fetchFiles()
       fetchCategories()
     }, 1000)
   }
@@ -279,11 +279,11 @@ const handleUploadError = (error, uploadFile, uploadFiles) => {
   }, 1000)
 }
 
-// 删除照片
-const handleDelete = async (photo) => {
+// 删除文件
+const handleDelete = async (file) => {
   try {
     await ElMessageBox.confirm(
-      `确定要删除照片 "${photo.name}" 吗？`,
+      `确定要删除文件 "${file.name}" 吗？`,
       '删除确认',
       {
         confirmButtonText: '确定',
@@ -292,33 +292,33 @@ const handleDelete = async (photo) => {
       }
     )
 
-    const response = await fetch(`http://localhost:3000/api/photos/${encodeURIComponent(photo.path)}`, {
+    const response = await fetch(`http://localhost:3000/api/files/${encodeURIComponent(file.path)}`, {
       method: 'DELETE'
     })
 
     const result = await response.json()
     if (result.success) {
       ElMessage.success('删除成功')
-      // 刷新照片列表
-      fetchPhotos()
+      // 刷新文件列表
+      fetchFiles()
       fetchCategories()
     } else {
       ElMessage.error('删除失败: ' + result.message)
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('删除照片失败:', error)
+      console.error('删除文件失败:', error)
       ElMessage.error('删除失败，请稍后重试')
     }
   }
 }
 
-// 重命名照片
-const handleRename = (photo) => {
-  currentPhoto.value = photo
+// 重命名文件
+const handleRename = (file) => {
+  currentFile.value = file
   renameForm.value = {
-    oldName: photo.name,
-    newName: photo.name
+    oldName: file.name,
+    newName: file.name
   }
   renameDialogVisible.value = true
 }
@@ -330,7 +330,7 @@ const submitRename = async () => {
     if (valid) {
       renaming.value = true
       try {
-        const response = await fetch(`http://localhost:3000/api/photos/${encodeURIComponent(currentPhoto.value.path)}`, {
+        const response = await fetch(`http://localhost:3000/api/files/${encodeURIComponent(currentFile.value.path)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -342,13 +342,13 @@ const submitRename = async () => {
         if (result.success) {
           ElMessage.success('重命名成功')
           renameDialogVisible.value = false
-          // 刷新照片列表
-          fetchPhotos()
+          // 刷新文件列表
+          fetchFiles()
         } else {
           ElMessage.error('重命名失败: ' + result.message)
         }
       } catch (error) {
-        console.error('重命名照片失败:', error)
+        console.error('重命名文件失败:', error)
         ElMessage.error('重命名失败，请稍后重试')
       } finally {
         renaming.value = false

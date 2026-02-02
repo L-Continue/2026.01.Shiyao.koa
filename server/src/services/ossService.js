@@ -1,4 +1,5 @@
 const { client, config: ossConfig } = require('../config/alioss')
+const logger = require('../utils/logger')
 
 class OssService {
   /**
@@ -12,7 +13,7 @@ class OssService {
       const result = await client.put(ossPath, filePath)
       return result.url
     } catch (error) {
-      console.error('上传文件失败:', error)
+      logger.error('上传文件失败:', { error: error.message, stack: error.stack, ossPath })
       throw error
     }
   }
@@ -28,7 +29,7 @@ class OssService {
       const result = await client.put(ossPath, buffer)
       return result.url
     } catch (error) {
-      console.error('上传文件失败:', error)
+      logger.error('上传文件失败:', { error: error.message, stack: error.stack, ossPath })
       throw error
     }
   }
@@ -42,7 +43,7 @@ class OssService {
     try {
       await client.delete(ossPath)
     } catch (error) {
-      console.error('删除文件失败:', error)
+      logger.error('删除文件失败:', { error: error.message, stack: error.stack, ossPath })
       throw error
     }
   }
@@ -60,7 +61,7 @@ class OssService {
       // 删除原文件
       await client.delete(oldPath)
     } catch (error) {
-      console.error('重命名文件失败:', error)
+      logger.error('重命名文件失败:', { error: error.message, stack: error.stack, oldPath, newPath })
       throw error
     }
   }
@@ -78,7 +79,7 @@ class OssService {
       })
       return result.objects
     } catch (error) {
-      console.error('获取文件列表失败:', error)
+      logger.error('获取文件列表失败:', { error: error.message, stack: error.stack, prefix })
       throw error
     }
   }
@@ -96,7 +97,7 @@ class OssService {
       })
       return result.prefixes
     } catch (error) {
-      console.error('获取文件夹列表失败:', error)
+      logger.error('获取文件夹列表失败:', { error: error.message, stack: error.stack, prefix })
       throw error
     }
   }
@@ -134,7 +135,7 @@ class OssService {
       const hasPrefixes = result && result.prefixes && Array.isArray(result.prefixes) && result.prefixes.length > 0
       return hasObjects || hasPrefixes
     } catch (error) {
-      console.error('检查文件夹失败:', error)
+      logger.error('检查文件夹失败:', { error: error.message, stack: error.stack, folderPath })
       return false
     }
   }
@@ -152,7 +153,7 @@ class OssService {
       }
       await client.put(folderPath, Buffer.from(''))
     } catch (error) {
-      console.error('创建文件夹失败:', error)
+      logger.error('创建文件夹失败:', { error: error.message, stack: error.stack, folderPath })
       throw error
     }
   }
@@ -178,7 +179,7 @@ class OssService {
       const url = await client.signatureUrl(ossPath, options)
       return url
     } catch (error) {
-      console.error('获取签名 URL 失败:', error)
+      logger.error('获取签名 URL 失败:', { error: error.message, stack: error.stack, ossPath, style })
       throw error
     }
   }
@@ -199,7 +200,7 @@ class OssService {
       }
       return urls
     } catch (error) {
-      console.error('批量获取签名 URL 失败:', error)
+      logger.error('批量获取签名 URL 失败:', { error: error.message, stack: error.stack, ossPath })
       throw error
     }
   }

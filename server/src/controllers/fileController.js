@@ -5,6 +5,8 @@ const fs = require('fs/promises')
 
 const ossService = require('../services/ossService')
 const exifUtils = require('../utils/exifUtils')
+const AuthController = require('./authController')
+const logger = require('../utils/logger')
 
 /**
  * 从文件名中提取日期
@@ -35,12 +37,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage })
 
-class PhotoController {
+class FileController {
   /**
-   * 上传图片
+   * 上传文件
    * @param {Object} ctx - Koa 上下文
    */
-  async uploadPhoto(ctx) {
+  async uploadFile(ctx) {
     try {
       // 使用 multer 处理文件上传
       const uploadMiddleware = upload.single('file')
@@ -54,6 +56,17 @@ class PhotoController {
           }
         })
       })
+
+      // 打印请求体，查看密码是否被正确解析
+      console.log('ctx.request.body:', ctx.request.body)
+      console.log('ctx.body:', ctx.body)
+
+      // 验证权限
+      if (!AuthController.checkAuth(ctx)) {
+        ctx.status = 401
+        ctx.body = { error: '权限不足，请先验证密码' }
+        return
+      }
 
       const file = ctx.file
       if (!file) {
@@ -86,17 +99,17 @@ class PhotoController {
         name: path.basename(ossPath)
       }
     } catch (error) {
-      console.error('上传图片失败:', error)
+      logger.error('上传文件失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
-      ctx.body = { error: '上传图片失败，请稍后重试' }
+      ctx.body = { error: '上传文件失败，请稍后重试' }
     }
   }
 
   /**
-   * 获取照片列表
+   * 获取文件列表
    * @param {Object} ctx - Koa 上下文
    */
-  async getPhotos(ctx) {
+  async getFiles(ctx) {
     try {
       const { category } = ctx.query
 
@@ -110,7 +123,7 @@ class PhotoController {
       const files = await ossService.getFileList(`${category}/`)
 
       // 处理文件列表，生成签名 URL（返回多种样式的 URL）
-      const photos = await Promise.all(files.map(async (file) => {
+      const fileList = await Promise.all(files.map(async (file) => {
         const urls = await ossService.getSignedUrls(file.name)
         const name = path.basename(file.name)
         const date = extractDateFromFileName(name)
@@ -126,32 +139,32 @@ class PhotoController {
       }))
 
       ctx.status = 200
-      ctx.body = photos
+      ctx.body = fileList
     } catch (error) {
-      console.error('获取照片列表失败:', error)
+      logger.error('获取文件列表失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
-      ctx.body = { error: '获取照片列表失败，请稍后重试' }
+      ctx.body = { error: '获取文件列表失败，请稍后重试' }
     }
   }
 
   /**
-   * 获取最新上传的照片
+   * 获取最新上传的文件
    * @param {Object} ctx - Koa 上下文
    */
-  async getRecentPhotos(ctx) {
+  async getRecentFiles(ctx) {
     try {
       // 获取所有文件夹列表
       const folders = await ossService.getFolderList()
 
       // 过滤出 S.PHOTO.YYYY 格式的文件夹
-      const photoFolders = folders.filter(folder => {
+      const fileFolders = folders.filter(folder => {
         return /^S\.PHOTO\.\d{4}\/$/.test(folder)
       })
 
       // 获取每个文件夹下的文件
-      const allPhotos = []
+      const allFiles = []
 
-      for (const folder of photoFolders) {
+      for (const folder of fileFolders) {
         const files = await ossService.getFileList(folder)
 
         for (const file of files) {
@@ -159,7 +172,7 @@ class PhotoController {
           const name = path.basename(file.name)
           const date = extractDateFromFileName(name)
 
-          allPhotos.push({
+          allFiles.push({
             path: file.name,
             thumbUrl: urls.thumb,  // 缩略图 URL
             largeUrl: urls.large,  // 大图 URL
@@ -170,19 +183,19 @@ class PhotoController {
         }
       }
 
-      // 按日期排序，取最新的 20 张
-      allPhotos.sort((a, b) => {
+      // 按日期排序，取最新的 20 个
+      allFiles.sort((a, b) => {
         return new Date(b.date) - new Date(a.date)
       })
 
-      const recentPhotos = allPhotos.slice(0, 20)
+      const recentFiles = allFiles.slice(0, 20)
 
       ctx.status = 200
-      ctx.body = recentPhotos
+      ctx.body = recentFiles
     } catch (error) {
-      console.error('获取最新照片失败:', error)
+      logger.error('获取最新文件失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
-      ctx.body = { error: '获取最新照片失败，请稍后重试' }
+      ctx.body = { error: '获取最新文件失败，请稍后重试' }
     }
   }
 
@@ -203,50 +216,64 @@ class PhotoController {
       ctx.status = 200
       ctx.body = categories
     } catch (error) {
-      console.error('获取分类列表失败:', error)
+      logger.error('获取分类列表失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
       ctx.body = { error: '获取分类列表失败，请稍后重试' }
     }
   }
 
   /**
-   * 删除照片
+   * 删除文件
    * @param {Object} ctx - Koa 上下文
    */
-  async deletePhoto(ctx) {
+  async deleteFile(ctx) {
     try {
-      const { path: photoPath } = ctx.params
+      // 验证权限
+      if (!AuthController.checkAuth(ctx)) {
+        ctx.status = 401
+        ctx.body = { error: '权限不足，请先验证密码' }
+        return
+      }
 
-      if (!photoPath) {
+      const { path: filePath } = ctx.params
+
+      if (!filePath) {
         ctx.status = 400
-        ctx.body = { error: '请指定要删除的照片' }
+        ctx.body = { error: '请指定要删除的文件' }
         return
       }
 
       // 删除 OSS 上的文件
-      await ossService.deleteFile(photoPath)
+      await ossService.deleteFile(filePath)
 
       ctx.status = 200
       ctx.body = { success: true }
     } catch (error) {
-      console.error('删除照片失败:', error)
+      logger.error('删除文件失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
-      ctx.body = { error: '删除照片失败，请稍后重试' }
+      ctx.body = { error: '删除文件失败，请稍后重试' }
     }
   }
 
   /**
-   * 重命名照片
+   * 重命名文件
    * @param {Object} ctx - Koa 上下文
    */
-  async renamePhoto(ctx) {
+  async renameFile(ctx) {
     try {
+      // 验证权限
+      if (!AuthController.checkAuth(ctx)) {
+        ctx.status = 401
+        ctx.body = { error: '权限不足，请先验证密码' }
+        return
+      }
+
       const { path: oldPath } = ctx.params
       const { newName } = ctx.request.body
 
       if (!oldPath || !newName) {
         ctx.status = 400
-        ctx.body = { error: '请指定要重命名的照片和新文件名' }
+        ctx.body = { error: '请指定要重命名的文件和新文件名' }
         return
       }
 
@@ -263,13 +290,13 @@ class PhotoController {
       ctx.status = 200
       ctx.body = { success: true }
     } catch (error) {
-      console.error('重命名照片失败:', error)
+      logger.error('重命名文件失败:', { error: error.message, stack: error.stack })
       ctx.status = 500
-      ctx.body = { error: '重命名照片失败，请稍后重试' }
+      ctx.body = { error: '重命名文件失败，请稍后重试' }
     }
   }
 
 
 }
 
-module.exports = new PhotoController()
+module.exports = new FileController()

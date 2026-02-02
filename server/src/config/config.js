@@ -14,10 +14,21 @@ const siteConfig = {
     host: process.env.SERVER_HOST || 'localhost'
   },
 
-  // 照片管理配置
-  photo: {
-    // 管理密码，默认0000，可通过环境变量覆盖
-    managePassword: process.env.MANAGE_PASSWORD || '0000'
+  // 管理配置
+  manage: {
+    password: process.env.MANAGE_PASSWORD || '0000'
+  },
+
+  // session 配置
+  session: {
+    key: 'koa:sess',
+    maxAge: 1000 * 60 * 30,
+    autoCommit: true,
+    overwrite: true,
+    httpOnly: true,
+    signed: true,
+    rolling: true,
+    renew: false
   },
 
   // bodyParser 配置
@@ -25,6 +36,14 @@ const siteConfig = {
     multipart: true,
     jsonLimit: '1gb',
     formLimit: '1gb'
+  },
+
+  // 日志配置
+  log: {
+    level: process.env.LOG_LEVEL || 'info',
+    dir: process.env.LOG_DIR || 'logs',
+    maxFiles: 14,
+    maxsize: 5242880 // 5MB
   }
 }
 
